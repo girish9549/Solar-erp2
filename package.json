@@ -1,0 +1,1 @@
+{ "name": "solar-shop-erp", "version": "1.0.0", "description": "Solar shop ERP: stock, godown, GST invoices, employees, salary", "main": "server.js", "scripts": { "start": "node server.js" }, "engines": { "node": ">=22" } }
