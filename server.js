@@ -495,4 +495,3 @@ http.createServer(async (req, res) => {
     send(res, 500, { error: 'Server error: ' + e.message });
   }
 }).listen(PORT, HOST, () => console.log(`Solar ERP is running -> http://localhost:${PORT}   (DB: ${DB_FILE})`));
-

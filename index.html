@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Solar Shop ERP</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="login" class="hidden">
+  <form class="box" id="loginForm">
+    <h1><span class="dot"></span>Solar Shop ERP</h1>
+    <p>Sign in to your account</p>
+    <label class="f">Username</label><input name="username" autocomplete="username" required>
+    <label class="f" style="margin-top:10px">Password</label><input name="password" type="password" autocomplete="current-password" required>
+    <button class="btn sun" style="width:100%;margin-top:16px;padding:10px">Login</button>
+    <p id="loginErr" class="neg" style="margin:10px 0 0"></p>
+  </form>
+</div>
+
+<div id="app" class="hidden">
+  <nav id="side">
+    <div class="brand"><span class="dot"></span><span id="brandName">Solar ERP</span><small>Stock • Billing • Staff</small></div>
+    <a href="#/dashboard">📊 Dashboard</a>
+    <div class="grp">Inventory</div>
+    <a href="#/products">🔆 Products</a>
+    <a href="#/stock">📦 Stock &amp; Godown</a>
+    <a href="#/godowns">🏭 Godown List</a>
+    <div class="grp">Billing</div>
+    <a href="#/sales">🚚 Dispatch / Invoice</a>
+    <a href="#/purchases">📥 Goods Received</a>
+    <a href="#/parties">👥 Parties (Customers / Suppliers)</a>
+    <div class="grp">Staff</div>
+    <a href="#/employees">🧑‍🔧 Employees</a>
+    <a href="#/salary">💰 Salary</a>
+    <div class="grp">System</div>
+    <a href="#/settings">⚙️ Settings &amp; Backup</a>
+    <button class="btn ghost out" id="logout">Logout</button>
+  </nav>
+  <main id="main"></main>
+</div>
+
+<div id="modal" class="hidden"></div>
+<div id="toast" class="hidden"></div>
+<script src="app.js"></script>
+</body>
+</html>

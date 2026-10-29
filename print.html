@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Invoice</title>
+<style>
+  @page{size:A4;margin:8mm}
+  *{box-sizing:border-box}
+  body{margin:0;background:#e5e7eb;font-family:'Segoe UI',Arial,sans-serif;color:#111827;font-size:12px}
+  .toolbar{position:sticky;top:0;background:#0f2a47;padding:10px;text-align:center;z-index:5}
+  .toolbar button{padding:8px 22px;border:0;border-radius:6px;background:#f59e0b;font-weight:700;cursor:pointer;margin:0 6px}
+  .page{width:210mm;min-height:285mm;margin:14px auto;background:#fff;border:1.5px solid #0f2a47;display:flex;flex-direction:column}
+  .banner{position:relative;height:118px;flex-shrink:0;overflow:hidden;background:#0f2a47}
+  .banner svg{position:absolute;inset:0;width:100%;height:100%}
+  .banner .txt{position:absolute;left:24px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.45);max-width:68%}
+  .banner h1{margin:0;font-size:27px;letter-spacing:.3px}
+  .banner .tag{font-size:12px;color:#fde68a;margin-top:2px}
+  .banner .ad{font-size:11px;margin-top:6px;line-height:1.4}
+  .title{background:#f59e0b;color:#1f2937;text-align:center;font-weight:800;letter-spacing:.14em;padding:5px;font-size:13px}
+  .meta{display:grid;grid-template-columns:1.25fr 1fr;border-bottom:1px solid #0f2a47}
+  .meta>div{padding:9px 14px}
+  .meta>div+div{border-left:1px solid #0f2a47}
+  .meta h4{margin:0 0 4px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#17406b}
+  .meta .big{font-size:14px;font-weight:700}
+  .meta table{width:100%}.meta td{padding:1px 0}.meta td:first-child{color:#475569;width:42%}
+  table.items{width:100%;border-collapse:collapse}
+  .items th{background:#0f2a47;color:#fff;padding:7px 5px;font-size:10.5px;text-align:center;border:1px solid #0f2a47}
+  .items td{padding:6px 5px;border:1px solid #cbd5e1;border-top:0;vertical-align:top}
+  .items td.n{text-align:right;white-space:nowrap}.items td.c{text-align:center}
+  .items tr.fill td{height:26px}
+  .bottom{display:grid;grid-template-columns:1.2fr 1fr;border-top:1px solid #0f2a47}
+  .bottom>div{padding:10px 14px}
+  .bottom>div+div{border-left:1px solid #0f2a47;padding:0}
+  .sum div{display:flex;justify-content:space-between;padding:5px 14px;border-bottom:1px solid #e2e8f0}
+  .sum .grand{background:#0f2a47;color:#fff;font-size:15px;font-weight:800;border:0;padding:9px 14px}
+  .words{padding:8px 14px;border-top:1px solid #0f2a47;font-weight:600;background:#fffbeb}
+  .terms{font-size:10.5px;color:#334155;white-space:pre-line}
+  .terms b{color:#0f2a47}
+  .sign{display:flex;justify-content:space-between;align-items:flex-end;padding:14px 18px 12px;margin-top:auto;border-top:1px solid #0f2a47}
+  .sign .box{text-align:center;min-width:180px}.sign .line{border-top:1px solid #111;margin-top:36px;padding-top:4px}
+  .foot{background:#0f2a47;color:#fde68a;text-align:center;font-size:10px;padding:5px;letter-spacing:.06em}
+  .cancelled{position:absolute;top:42%;left:18%;font-size:90px;color:rgba(185,28,28,.22);transform:rotate(-24deg);font-weight:900;pointer-events:none}
+  .page{position:relative}
+  @media print{body{background:#fff}.toolbar{display:none}.page{margin:0;width:auto;min-height:0;border:1.5px solid #0f2a47}
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<div class="toolbar"><button onclick="print()">🖨 Print / PDF Save</button><button onclick="window.close()" style="background:#fff">Close</button></div>
+<div id="out"><p style="text-align:center;padding:40px">Loading...</p></div>
+
+<script>
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const inr=n=>'₹ '+Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const num=n=>Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const qf=n=>Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:3});
+const fd=d=>d?d.split('-').reverse().join('-'):'';
+
+function words(n){
+  const a=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  const b=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  const two=x=>x<20?a[x]:b[Math.floor(x/10)]+(x%10?' '+a[x%10]:'');
+  const three=x=>(x>99?a[Math.floor(x/100)]+' Hundred'+(x%100?' ':''):'')+(x%100?two(x%100):'');
+  n=Math.round(Math.abs(n)); if(!n)return 'Zero';
+  const cr=Math.floor(n/1e7), lk=Math.floor(n/1e5)%100, th=Math.floor(n/1e3)%100, rest=n%1000;
+  return [cr&&three(cr)+' Crore',lk&&two(lk)+' Lakh',th&&two(th)+' Thousand',rest&&three(rest)].filter(Boolean).join(' ');
+}
+
+/* Solar banner: sun + solar panels (original artwork) */
+function banner(){
+  let panels='';
+  for(let r=0;r<2;r++)for(let c=0;c<5;c++){
+    const x=535+c*46-r*10, y=26+r*40;
+    panels+=`<g transform="skewX(-16) translate(18 0)"><rect x="${x}" y="${y}" width="42" height="34" rx="2" fill="#12386b" stroke="#7dd3fc" stroke-width="1.2"/>
+      <path d="M${x+14} ${y}v34M${x+28} ${y}v34M${x} ${y+11.3}h42M${x} ${y+22.6}h42" stroke="#38bdf8" stroke-width=".7" opacity=".85"/></g>`;
+  }
+  let rays='';for(let i=0;i<12;i++){const a=i*Math.PI/6;rays+=`<line x1="${Math.cos(a)*30}" y1="${Math.sin(a)*30}" x2="${Math.cos(a)*43}" y2="${Math.sin(a)*43}" stroke="#fbbf24" stroke-width="4" stroke-linecap="round"/>`}
+  return `<svg viewBox="0 0 794 118" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="sky" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0f2a47"/><stop offset=".55" stop-color="#17406b"/><stop offset="1" stop-color="#2b78c4"/></linearGradient>
+    <radialGradient id="glow"><stop offset="0" stop-color="#fde68a" stop-opacity=".9"/><stop offset="1" stop-color="#f59e0b" stop-opacity="0"/></radialGradient></defs>
+    <rect width="794" height="118" fill="url(#sky)"/>
+    <circle cx="520" cy="48" r="80" fill="url(#glow)" opacity=".5"/>
+    <g transform="translate(520 48)">${rays}<circle r="22" fill="#fbbf24"/><circle r="22" fill="none" stroke="#fde68a" stroke-width="3"/></g>
+    ${panels}
+    <rect y="110" width="794" height="8" fill="#f59e0b"/></svg>`;
+}
+
+(async()=>{
+  const q=new URLSearchParams(location.search), kind=q.get('type')==='purchase'?'purchase':'sale', id=q.get('id');
+  const token=localStorage.getItem('erp_token')||'';
+  const H={Authorization:'Bearer '+token};
+  const [sr,br]=await Promise.all([fetch('/api/settings',{headers:H}),fetch(`/api/${kind==='sale'?'sales':'purchases'}/${id}`,{headers:H})]);
+  if(!sr.ok||!br.ok){document.getElementById('out').innerHTML='<p style="text-align:center;padding:40px">Could not open the bill. Please log in to the main app first.</p>';return}
+  const S=await sr.json(), b=await br.json();
+  document.title=(kind==='sale'?'Invoice ':'Purchase Bill ')+b.number;
+  const p=b.party, inter=b.igst>0;
+  const items=b.items.map((i,n)=>`<tr><td class="c">${n+1}</td><td>${esc(i.product_name)}</td><td class="c">${esc(i.hsn)}</td><td class="n">${qf(i.qty)} ${esc(i.unit)}</td>
+    <td class="n">${num(i.rate)}</td><td class="n">${num(i.taxable)}</td><td class="c">${i.gst_rate}%</td><td class="n">${num(i.gst_amt)}</td><td class="n"><b>${num(i.line_total)}</b></td></tr>`).join('');
+  const fills=Math.max(0,8-b.items.length);
+  const fill=Array.from({length:fills},()=>`<tr class="fill"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`).join('');
+  const title=kind==='sale'?(S.gstin?'TAX INVOICE':'INVOICE'):'GOODS RECEIPT / PURCHASE BILL';
+  document.getElementById('out').innerHTML=`<div class="page">
+    ${b.status==='cancelled'?'<div class="cancelled">CANCELLED</div>':''}
+    <div class="banner">${banner()}<div class="txt"><h1>${esc(S.shop_name)}</h1><div class="tag">${esc(S.tagline)}</div>
+      <div class="ad">${esc(S.address)}<br>${S.phone?'📞 '+esc(S.phone):''} ${S.email?' • ✉ '+esc(S.email):''} ${S.gstin?' • GSTIN: <b>'+esc(S.gstin)+'</b>':''}</div></div></div>
+    <div class="title">${title}</div>
+    <div class="meta">
+      <div><h4>${kind==='sale'?'Bill To':'Supplier'}</h4><div class="big">${esc(p.name)}</div>
+        <div>${esc(p.address)} ${esc(p.city)}</div><div>${esc(p.state)}</div>${p.phone?`<div>📞 ${esc(p.phone)}</div>`:''}${p.gstin?`<div>GSTIN: <b>${esc(p.gstin)}</b></div>`:''}</div>
+      <div><table><tr><td>${kind==='sale'?'Invoice No':'Bill No'}</td><td><b>${esc(b.number)}</b></td></tr><tr><td>Date</td><td><b>${fd(b.date)}</b></td></tr>
+        <tr><td>Godown</td><td>${esc(b.godown.name)}</td></tr>${b.vehicle?`<tr><td>Vehicle No</td><td>${esc(b.vehicle)}</td></tr>`:''}
+        <tr><td>Supply</td><td>${inter?'Inter-State (IGST)':'Intra-State (CGST+SGST)'}</td></tr></table></div></div>
+    <table class="items"><thead><tr><th style="width:5%">#</th><th>Product / Description</th><th style="width:8%">HSN</th><th style="width:11%">Qty</th><th style="width:11%">Rate (₹)</th><th style="width:12%">Taxable (₹)</th><th style="width:7%">GST</th><th style="width:10%">GST Amt</th><th style="width:12%">Amount (₹)</th></tr></thead>
+      <tbody>${items}${fill}</tbody></table>
+    <div class="bottom">
+      <div class="terms">${S.bank_details?`<b>Bank Details</b>\n${esc(S.bank_details)}\n\n`:''}${b.notes?`<b>Note:</b> ${esc(b.notes)}\n\n`:''}<b>Terms &amp; Conditions</b>\n${esc(S.terms)}</div>
+      <div class="sum">
+        <div><span>Subtotal</span><span>${num(b.subtotal)}</span></div>
+        <div><span>Discount${b.discount_type==='percent'?` (${b.discount_value}%)`:''}</span><span>- ${num(b.discount_amt)}</span></div>
+        <div><span>Taxable Amount</span><span>${num(b.taxable)}</span></div>
+        ${inter?`<div><span>IGST</span><span>${num(b.igst)}</span></div>`:`<div><span>CGST</span><span>${num(b.cgst)}</span></div><div><span>SGST</span><span>${num(b.sgst)}</span></div>`}
+        <div><span>Round Off</span><span>${num(b.round_off)}</span></div>
+        <div class="grand"><span>TOTAL</span><span>${inr(b.total)}</span></div>
+        <div><span>Paid</span><span>${num(b.paid)}</span></div>
+        <div style="border:0"><span><b>Balance Due</b></span><span><b>${num(b.balance)}</b></span></div>
+      </div></div>
+    <div class="words">Amount in words: Rupees ${words(b.total)} Only</div>
+    <div class="sign"><div class="box"><div class="line">${kind==='sale'?"Customer's signature":"Receiver's signature"}</div></div>
+      <div class="box"><div style="font-weight:700;color:#0f2a47">For ${esc(S.shop_name)}</div><div class="line">${esc(S.signatory)}</div></div></div>
+    <div class="foot">☀ Thank you! Go solar, save electricity ☀</div></div>`;
+  if(q.get('auto')==='1')setTimeout(()=>print(),400);
+})();
+</script>
+</body>
+</html>
